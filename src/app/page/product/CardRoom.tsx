@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Zap, ImageIcon, SquarePen } from 'lucide-react' // เพิ่ม ImageIcon
+import { ArrowRight, Zap, ImageIcon, SquarePen, BedDouble } from 'lucide-react' // เพิ่ม ImageIcon
 import { useRouter } from 'next/navigation'
 import { TProductWithRelations } from './page'
 import { useAuthHook } from '@/hooks/auth-hook';
@@ -15,6 +15,10 @@ function CardRooms({ data }: Props) {
     const handleBooking = () => {
         router.push(`/page/product/${data.id}/booking`);
     };
+
+    const handleRoom = () => {
+        router.push(`/page/product/${data.id}/room`);
+    }
 
     const handleEdit = () => {
         router.push(`/page/product/${data.id}`);
@@ -69,13 +73,23 @@ function CardRooms({ data }: Props) {
                     <div className='flex gap-2'>
                         {
                             user.role === "ADMIN" &&
-                            <button
-                                onClick={handleEdit} // ใช้ router.push แทน redirect
-                                className="shrink-0 bg-sky-800 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-sky-600 shadow-xl shadow-slate-200 cursor-pointer"
-                            >
-                                <SquarePen size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
-                                {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
-                            </button>
+                            <>
+                                <button
+                                    onClick={handleEdit} // ใช้ router.push แทน redirect
+                                    className="shrink-0 bg-sky-800 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-sky-600 shadow-xl shadow-slate-200 cursor-pointer"
+                                >
+                                    <SquarePen size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                    {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
+                                </button>
+
+                                <button
+                                    onClick={handleRoom} // ใช้ router.push แทน redirect
+                                    className="shrink-0 bg-yellow-600 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-yellow-500 shadow-xl shadow-slate-200 cursor-pointer"
+                                >
+                                    <BedDouble size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                    {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
+                                </button>
+                            </>
                         }
                         <button
                             onClick={handleBooking} // ใช้ router.push แทน redirect
