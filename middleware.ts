@@ -2,54 +2,54 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // 1. ดึง Token จาก Cookie
   const token = request.cookies.get('jwt')?.value
   const { pathname } = request.nextUrl
 
-  // 2. กำหนด Path ที่เป็นหน้า Login
-  const isLoginPage = pathname === '/page/login'
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.includes('/api/') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next()
+  }
 
-  if (pathname === "/health" || pathname === "/health/" || pathname === "/healthz") {
+  if (["/health", "/health/", "/healthz"].includes(pathname)) {
     return NextResponse.redirect(new URL("/", request.url), 307);
   }
 
   const publicPaths = [
-    "/page/dashboard",
-    "/page/product",
-    "/page/user-management",
+    "/page/login",
     "/public",
-    "/_next",
-    "/favicon.ico",
     "/api",
+    "/favicon.ico",
   ];
 
-  for (const p of publicPaths) {
-    if (pathname === p || pathname.startsWith(p + "/")) {
-      console.debug(`[middleware] allowing public path: ${pathname} matches ${p}`);
-      return NextResponse.next();
+  const isPublicPath = publicPaths.some(path =>
+    pathname === path || pathname.startsWith(path + "/")
+  ) || pathname.startsWith('/_next');
+
+
+  if (isPublicPath) {
+    if (token && pathname === '/page/login') {
+      return NextResponse.redirect(new URL('/page/dashboard', request.url))
     }
+    return NextResponse.next()
   }
 
-  // 3. ถ้าไม่มี Token และพยายามเข้าหน้าอื่นที่ไม่ใช่ Login -> ไล่กลับไปหน้า Login
-  if (!token && !isLoginPage) {
-    return NextResponse.redirect(new URL('/page/login', request.url))
-  }
-
-  // 4. ถ้ามี Token แล้วแต่ยังจะเข้าหน้า Login -> ส่งไปหน้า Dashboard
-  if (token && isLoginPage) {
-    return NextResponse.redirect(new URL('/page/dashboard', request.url))
+  if (!token) {
+    const loginUrl = new URL('/page/login', request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
 }
 
-// 5. กำหนดว่าจะให้ Middleware ทำงานที่ Path ไหนบ้าง
 // export const config = {
+//   // แนะนำให้ใช้ matcher ที่ตัดไฟล์ static ออกเพื่อลดการทำงานของ Middleware
 //   matcher: [
-//     '/((?!api|_next/static|_next/image|favicon.ico).*)',
+//     '/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)',
 //   ],
-// }
-
+// };
 export const config = {
   matcher: ["/:path*"],
 };

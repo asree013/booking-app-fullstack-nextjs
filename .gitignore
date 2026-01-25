@@ -42,20 +42,22 @@ next-env.d.ts
 
 /src/generated/prisma
 
-/generated/prisma
+/public/uploads
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
 
-/generated/prisma
+# /generated/prisma
+
+# /generated/prisma

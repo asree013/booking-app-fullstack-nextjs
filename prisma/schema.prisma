@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -26,6 +20,7 @@ model Users {
   role        Roles    @default(USER)
   create_date DateTime @default(now())
   update_date DateTime @updatedAt
+  bookings    Bookings[]
 }
 
 enum Roles {
@@ -36,43 +31,81 @@ enum Roles {
   USER
 }
 
-model Bookings {
-  id    String  @id @default(uuid())
-  rooms Rooms[]
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  detail      String?
+  image       String?
+  products    Product[] // 1 Category มีได้หลาย Products
+  create_date DateTime  @default(now())
+  update_date DateTime  @updatedAt
 }
 
 model Product {
-  id          String            @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
   detail      String?
   image       String?
-  price       String?
-  create_date DateTime          @default(now())
-  update_date DateTime          @updatedAt
-  rating      Int?
-  rooms       Rooms[]
-  categorys   CategoryBooking[]
+  price       String?   // ราคาเริ่มต้น หรือราคาเฉลี่ยของประเภทนี้
+  rating      Int?      @default(0)
+  
+  // Relations
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  rooms       Rooms[]   // 1 ประเภทสินค้า (เช่น Deluxe) มีได้หลายห้องจริง
+  
+  create_date DateTime  @default(now())
+  update_date DateTime  @updatedAt
 }
 
 model Rooms {
   id          String    @id @default(uuid())
-  is_active   Boolean   @default(false)
+  name        String    // เลขห้อง เช่น A101
+  price       Int       // ราคาจริงของห้องนี้
   image       String?
-  name        String
-  price       Int
-  room_id     String
-  products    Product   @relation(fields: [room_id], references: [id])
+  is_active   Boolean   @default(true)
+  
+  // Relations
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  bookingId   String?
+  booking     Bookings? @relation(fields: [bookingId], references: [id])
+
   create_date DateTime  @default(now())
   update_date DateTime  @updatedAt
-  bookings    Bookings? @relation(fields: [id], references: [id])
+}
+
+model Bookings {
+  id            String          @id @default(uuid())
+  userId        String
+  user          Users           @relation(fields: [userId], references: [id])
+  rooms         Rooms[]         // 1 การจองอาจจองได้หลายห้อง
+  
+  // สถานะและหมวดหมู่การจอง
+  status        BookingStatus   @default(PENDING)
+  bookingTypeId String
+  bookingType   CategoryBooking @relation(fields: [bookingTypeId], references: [id])
+  
+  total_price   Int
+  check_in      DateTime
+  check_out     DateTime
+  create_date   DateTime        @default(now())
+  update_date   DateTime        @updatedAt
 }
 
 model CategoryBooking {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String     @id @default(uuid())
+  name        String     @unique // เช่น "จองรายวัน", "แพ็คเกจสัมมนา"
   detail      String?
-  image       String?
-  products    Product[]
-  create_date DateTime @default(now())
-  update_date DateTime @updatedAt
+  bookings    Bookings[]
+  create_date DateTime   @default(now())
+  update_date DateTime   @updatedAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }

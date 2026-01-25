@@ -14,7 +14,6 @@ import { useAuthHook } from '@/hooks/auth-hook';
 
 export default function LoginPage() {
     const routers = useRouter();
-    // const { setUser, setIsLogin } = useAuthHook()
     const { toast, open, setOpen, title, description, variant } = useToast();
 
     const {
@@ -41,10 +40,12 @@ export default function LoginPage() {
             jwt: result.data.jwt,
             first_name: result.data.user.first_name,
             last_name: result.data.user.last_name,
+            role: result.data.user.role
         } as {
             jwt: string,
             first_name: string,
             last_name: string,
+            role: string
         }
         localStorage.setItem('userData', JSON.stringify(users))
 

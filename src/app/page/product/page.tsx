@@ -1,201 +1,183 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { redirect, useRouter } from 'next/navigation';
-import * as Tabs from '@radix-ui/react-tabs';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { NIL } from 'uuid';
-import {
-  Search,
-  Star,
-  ArrowRight,
-  Zap,
-  ListFilter,
-  Plus
-} from 'lucide-react';
-import CardBooking from './CardRoom';
-import { CategoryBooking, Product, Rooms } from '@prisma/client';
+import { Search, Plus, LayoutGrid, MapPin, Tag } from 'lucide-react';
+import { Product, Rooms } from '@prisma/client';
 import CardRooms from './CardRoom';
 
+// --- Ant Design ---
+import { Select, ConfigProvider, Divider, Input, Button, Space, type InputRef } from 'antd';
+import { apiService } from '@/service/ApiServices';
+
 export type TProductWithRelations = Product & {
-  categorys?: CategoryBooking[]
   rooms?: Rooms[]
 };
 
-const MOCK_CATEGORIES = [
-  { id: '1', name: 'Standard', image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&q=80&w=300' },
-  { id: '2', name: 'Deluxe', image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=300' },
-  { id: '3', name: 'Suite', image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=300' },
-  { id: '4', name: 'Villa', image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&q=80&w=300' },
-];
-
-const MOCK_PRODUCTS: TProductWithRelations[] = [
-  {
-    id: 'p1',
-    name: 'Ocean Front Suite',
-    price: '2500',
-    detail: 'วิวทะเล 180 องศา พร้อมระเบียงส่วนตัวและอ่างอาบน้ำจากุซซี่',
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800',
-    rating: 5,
-    create_date: new Date(),
-    update_date: new Date(),
-    categorys: [
-      { id: '3', create_date: new Date(), update_date: new Date(), detail: "", image: "", name: "" }
-    ],
-    rooms: [
-      {
-        id: '1',
-        room_id: '1',
-        image: '',
-        create_date: new Date(),
-        update_date: new Date(),
-        is_active: false,
-        name: "A101",
-        price: 200
-      },
-      {
-        id: '2',
-        room_id: '2',
-        image: '',
-        create_date: new Date(),
-        update_date: new Date(),
-        is_active: false,
-        name: "A102",
-        price: 200
-      },
-    ]
-  },
-  {
-    id: 'p2',
-    name: 'City View Standard',
-    price: '1200',
-    detail: 'ห้องพักใจกลางเมือง เดินทางสะดวกใกล้รถไฟฟ้า',
-    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=800',
-    rating: 4,
-    create_date: new Date(),
-    update_date: new Date(),
-    categorys: [{ id: '1', create_date: new Date(), update_date: new Date(), detail: "", image: "", name: "" }]
-  },
-  {
-    id: 'p3',
-    name: 'Deluxe Garden',
-    price: '1800',
-    detail: 'บรรยากาศสวนร่มรื่น เงียบสงบ เหมาะสำหรับการพักผ่อน',
-    image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800',
-    rating: 4,
-    create_date: new Date(),
-    update_date: new Date(),
-    categorys: [{ id: '2', create_date: new Date(), update_date: new Date(), detail: "", image: "", name: "" }, { id: '1', create_date: new Date(), update_date: new Date(), detail: "", image: "", name: "" }]
-  }
-];
-
 export default function BookingSelectionPage() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState('all');
+  
+  // 1. States
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [newCatName, setNewCatName] = useState('');
+  const inputRef = useRef<InputRef>(null);
+  const [products, setProducts] = useState<TProductWithRelations[]>([]);
 
+  const fetchData = useCallback(async () => {
+    const [prodRes, catRes] = await Promise.all([
+      apiService.getProduct(),
+      apiService.getCategoryProduct()
+    ]);
+    
+    if (!prodRes.err) setProducts(prodRes.data);
+    if (!catRes.err) setCategories(catRes.data);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const onAddCategory = async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+
+    const result = await apiService.createCategoryProduct({ name: newCatName, detail: "" } as any);
+    if (!result.err) {
+      setCategories(prev => [...prev, result.data]);
+      setNewCatName('');
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  };
+
+  // 4. Filter Logic
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter(p => {
-      const matchCategory = activeCategory === 'all' ||
-        p.categorys?.some(cat => String(cat.id) === activeCategory);
-
+    return products.filter(p => {
+      const matchCategory = activeCategory === 'all' || p.categoryId === activeCategory;
       const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
       return matchCategory && matchSearch;
     });
-  }, [activeCategory, search]);
+  }, [activeCategory, search, products]);
 
   return (
-    <div className="w-full max-w-full min-h-screen bg-slate-50 overflow-x-hidden pb-12">
-      <div className="w-full p-3 sm:p-6 lg:p-8">
-        <section className="w-full bg-indigo-600 rounded-[2rem] sm:rounded-[2.5rem] px-5 py-8 sm:py-20 relative overflow-hidden shadow-2xl shadow-indigo-200">
-          <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-
-          <div className="max-w-4xl mx-auto relative z-10 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h1 className="text-2xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-tight">
-                PICK YOUR <br className="sm:hidden" /> SPACE
-              </h1>
-
-              <button
-                onClick={() => redirect(`/page/product/${NIL}`)}
-                className="hidden sm:flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-xl active:scale-95 cursor-pointer shrink-0"
-              >
-                <Plus size={18} strokeWidth={3} /> Add New Room
-              </button>
-            </div>
-
-            <div className="w-full max-w-xl bg-white p-1.5 rounded-2xl shadow-xl flex items-center mx-auto sm:mx-0 overflow-hidden border border-white/20">
-              <input
-                className="flex-1 min-w-0 p-2.5 sm:p-3 text-sm font-bold outline-none text-slate-700 bg-transparent"
-                placeholder="ค้นหาบริการ..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <div className="flex items-center gap-1.5 pr-1">
-                <button className="shrink-0 bg-indigo-600 text-white p-2.5 sm:p-3 rounded-xl hover:bg-indigo-700 transition-all active:scale-95">
-                  <Search size={18} className="sm:w-5 sm:h-5" strokeWidth={3} />
-                </button>
-                <button
-                  onClick={() => redirect(`/page/product/${NIL}`)}
-                  className="sm:hidden shrink-0 bg-emerald-500 text-white p-2.5 rounded-xl active:scale-95 shadow-lg shadow-emerald-500/20"
+    <ConfigProvider theme={{ token: { colorPrimary: '#4f46e5', borderRadius: 12 } }}>
+      <div className="w-full max-w-full min-h-screen bg-slate-50 overflow-x-hidden pb-12">
+        
+        {/* Hero Section */}
+        <div className="w-full p-3 sm:p-6 lg:p-8">
+          <section className="w-full bg-indigo-600 rounded-[2rem] sm:rounded-[3rem] px-6 py-10 sm:py-24 relative overflow-hidden shadow-2xl shadow-indigo-200">
+            <div className="max-w-5xl mx-auto relative z-10">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                <div className="space-y-2 text-white">
+                  <div className="flex items-center gap-2 font-bold text-xs uppercase opacity-80">
+                    <MapPin size={14} /> Premium Spaces
+                  </div>
+                  <h1 className="text-4xl sm:text-7xl font-black italic uppercase leading-[0.9]">
+                    BOOKING <br /> <span className="text-indigo-300">SYSTEM</span>
+                  </h1>
+                </div>
+                <button 
+                  onClick={() => router.push(`/page/product/${NIL}`)} 
+                  className="hidden md:flex items-center gap-3 bg-white text-indigo-600 px-8 py-4 rounded-2xl font-black text-sm uppercase shadow-xl hover:scale-105 transition-all"
                 >
-                  <Plus size={18} strokeWidth={3} />
+                  <Plus size={20} strokeWidth={3} /> Add New
                 </button>
               </div>
+
+              {/* Search Bar */}
+              <div className="w-full max-w-2xl bg-white p-2 rounded-2xl shadow-2xl flex items-center">
+                <Search size={20} className="ml-4 text-slate-400" />
+                <input
+                  className="flex-1 p-3 font-bold outline-none text-slate-700 bg-transparent"
+                  placeholder="ค้นหาชื่อรายการ..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <main className="w-full max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+            
+            {/* Category Filter */}
+            <div className="bg-white p-1 pl-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 min-w-[320px]">
+              <LayoutGrid size={18} className="text-indigo-500" />
+              <div className="flex flex-col flex-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter -mb-1">Category Filter</span>
+                <Select
+                  showSearch
+                  placeholder="เลือกหมวดหมู่"
+                  variant="borderless"
+                  className="w-full font-bold"
+                  value={activeCategory}
+                  onChange={(val) => setActiveCategory(val)}
+                  filterOption={(input, option) =>
+                    (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  dropdownRender={(menu) => (
+                    <div className="p-2">
+                      {menu}
+                      <Divider className="my-2" />
+                      <Space className="w-full" direction="vertical">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="เพิ่มหมวดหมู่ใหม่..."
+                            ref={inputRef}
+                            value={newCatName}
+                            onChange={(e) => setNewCatName(e.target.value)}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                          <Button 
+                            type="primary" 
+                            size="small"
+                            className="bg-indigo-600 font-bold"
+                            onClick={onAddCategory}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </Space>
+                    </div>
+                  )}
+                  options={[
+                    { value: 'all', label: 'All Services' },
+                    ...categories.map(cat => ({
+                      value: cat.id,
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <Tag size={14} className="text-slate-400" />
+                          <span>{cat.name}</span>
+                        </div>
+                      )
+                    }))
+                  ]}
+                />
+              </div>
+            </div>
+
+            <div className="px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase">
+              {filteredProducts.length} results found
             </div>
           </div>
-        </section>
-      </div>
 
-      <main className="w-full max-w-full px-4 sm:px-6 lg:max-w-7xl lg:mx-auto min-w-0">
-        <div className="w-full relative overflow-hidden mb-8">
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 no-scrollbar scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
-            <button
-              onClick={() => setActiveCategory('all')}
-              className={`flex-shrink-0 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 shadow-sm ${activeCategory === 'all'
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-200'
-                  : 'bg-white text-slate-400 border-white hover:border-indigo-100'
-                }`}
-            >
-              All Services
-            </button>
-            {MOCK_CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-2.5 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border-2 shadow-sm ${activeCategory === cat.id
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-200'
-                    : 'bg-white text-slate-400 border-white hover:border-indigo-100'
-                  }`}
-              >
-                <div className="w-5 h-5 rounded-lg overflow-hidden shrink-0 border border-slate-100">
-                  <img src={cat.image} className="w-full h-full object-cover" alt="" />
-                </div>
-                <span className="whitespace-nowrap">{cat.name}</span>
-              </button>
+          {/* Product Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProducts.map(product => (
+              <CardRooms key={product.id} data={product} />
             ))}
           </div>
-        </div>
-
-        <div className="flex items-center justify-between mb-8 px-1">
-          <h2 className="text-lg sm:text-xl font-black italic text-slate-900 uppercase tracking-tight leading-none truncate mr-2">
-            RESULTS <span className="text-indigo-600">({filteredProducts.length})</span>
-          </h2>
-          <button className="shrink-0 p-2.5 bg-white rounded-xl border border-slate-100 text-slate-400 shadow-sm hover:text-indigo-600">
-            <ListFilter size={18} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 min-w-0">
-          {filteredProducts.map(product => (
-            <CardRooms key={product.id} data={product as any} />
-          ))}
-        </div>
-      </main>
-
-      <style jsx global>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-    </div>
+          
+          {filteredProducts.length === 0 && (
+            <div className="w-full py-20 text-center text-slate-400 font-bold italic">
+              No results found for your search.
+            </div>
+          )}
+        </main>
+      </div>
+    </ConfigProvider>
   );
 }

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react"
 import Cookies from 'js-cookie'
 
 export const useAuthHook = () => {
-    const [user, setUser] = useState({ jwt: "", first_name: "", last_name: "" })
+    const [user, setUser] = useState({ jwt: "", first_name: "", last_name: "", role: "" })
     const [isLoad, setIsLoad] = useState(true)
 
     useEffect(() => {
+        console.log("useAuthHook");
+        
         const userData = localStorage.getItem('userData')
         if (userData) {
             setUser(JSON.parse(userData))

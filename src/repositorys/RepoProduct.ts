@@ -9,9 +9,6 @@ export class RepoProduct implements IBaseService<Product> {
     try {
       const result = await prisma.product.findMany({
         include: {
-          categorys: {
-            select: { name: true, id: true }
-          },
           rooms: {
             select: {
               id: true,
@@ -43,25 +40,26 @@ export class RepoProduct implements IBaseService<Product> {
     }
   }
 
-  async create(data: Product & { category: { id: string }[] } & { rooms: Rooms }): Promise<THandler<Product>> {
+  async create(data: Product & { category: { id?: string }[] } & { rooms?: Rooms }): Promise<THandler<Product>> {
     try {
       const { category, rooms, ...productData } = data;
 
       const result = await prisma.product.create({
         data: {
           ...productData,
-          categorys: {
-            connect: category.map(c => ({ id: c.id }))
-          },
-          rooms: {
-            create: {
-              id: rooms.id, 
-              name: rooms.name,
-              price: rooms.price,
-              is_active: rooms.is_active,
-              image: rooms.image,
-            }
-          }
+          // categorys: {
+          //   connect: category.filter(c => c.id).map(c => ({ id: c.id }))
+          // },
+          // ...(rooms && rooms.name && {
+          //   rooms: {
+          //     create: {
+          //       name: rooms.name,
+          //       price: Number(rooms.price),
+          //       is_active: rooms.is_active ?? false,
+          //       image: rooms.image || null,
+          //     }
+          //   }
+          // })
         }
       });
 

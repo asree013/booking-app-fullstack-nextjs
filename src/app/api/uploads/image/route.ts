@@ -26,12 +26,13 @@ export const POST = async (req: NextRequest) => {
 
         return NextResponse.json({ 
             success: true, 
-            url: imageUrl 
+            data: imageUrl 
         }, { status: 200 });
 
     } catch (error: any) {
         console.error("Upload Error:", error);
         return NextResponse.json({ 
+            data: null,
             success: false, 
             message: error.message 
         }, { status: 500 });

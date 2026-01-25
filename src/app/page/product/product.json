@@ -1,0 +1,11 @@
+{
+      "id": "p1",
+      "name": "Ocean Front Suite",
+      "price": "2500",
+      "detail": "วิวทะเล 180 องศา",
+      "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
+      "rating": 5,
+      "create_date": "",
+      "update_date": "",
+      "categorys": [{ "id": "1", "name": "Standard" }],
+    }
