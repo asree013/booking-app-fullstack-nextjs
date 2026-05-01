@@ -18,18 +18,19 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. เข้าไปยังโฟลเดอร์โปรเจกต์ (ถ้ายังไม่มีให้ clone มาก่อน)
-            if [ ! -d "~/booking-app" ]; then
-              git clone https://github.com/asree013/booking-app-fullstack-nextjs.git ~/booking-app
-            fi
-            
-            cd ~/booking-app
-            
-            # 2. ดึงโค้ดล่าสุด
-            git pull origin main
-            
-            # 3. รัน Docker (จะ build ใหม่ตาม Dockerfile ที่คุณเขียนไว้)
-            docker compose -f ./db-compose.yml up -d app_next --build --force-recreate
-            
-            # 4. ล้าง image เก่าๆ ที่ไม่ได้ใช้
+            # 1. เข้าโฟลเดอร์โปรเจกต์ใน Server
+            cd /root/booking-app-fullstack-nextjs 
+
+            # 2. อัปเดตโค้ดจาก GitHub มาไว้ที่ Server
+            git fetch --all
+            git reset --hard origin/main
+
+            # 3. สั่ง Build โดยระบุชื่อไฟล์เป็น app.yml และเจาะจง service app_next
+            # ใช้ --no-cache เพื่อบังคับให้สร้างใหม่ 100% ไม่ใช้ของเก่า
+            docker compose -f app.yml up -d app_next --build --no-cache
+
+            # 4. ลบไฟล์ขยะ
             docker image prune -f
+
+            # 5. ตรวจสอบสถานะ (จะไปโผล่ในหน้า GitHub Actions ให้เราดู)
+            docker ps | grep app_next
