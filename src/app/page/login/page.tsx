@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/toast-hook';
 import { ToastContainer } from '@/app/components/ToastContainer';
 import { Loader2 } from 'lucide-react';
 import { useAuthHook } from '@/hooks/auth-hook';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -105,6 +106,12 @@ export default function LoginPage() {
                         >
                             {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'เข้าสู่ระบบ'}
                         </button>
+
+                        <Link href="/page/sign-up">
+                            <button>
+                                สมัครสมาชิก
+                            </button>
+                        </Link>
                     </form>
                 </div>
             </div>

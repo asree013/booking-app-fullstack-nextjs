@@ -6,8 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   // const pathname = window.location.pathname
-  const isLoginPage = pathname === '/page/login';
-  
+  const isLoginPage = pathname === '/page/login' || "/page/sign-up";
+
   if (isLoginPage) {
     return <>{children}</>;
   }
