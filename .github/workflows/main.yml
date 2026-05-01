@@ -29,7 +29,7 @@ jobs:
             git pull origin main
             
             # 3. รัน Docker (จะ build ใหม่ตาม Dockerfile ที่คุณเขียนไว้)
-            docker compose up -d --build
+            docker compose -f ./db-compose.yml up -d app_next --build --force-recreate
             
             # 4. ล้าง image เก่าๆ ที่ไม่ได้ใช้
             docker image prune -f
