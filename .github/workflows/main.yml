@@ -1,4 +1,5 @@
-name: Deploy Next.js to Server
+name: Deploy Next.js to Server (Docker)
+
 on:
   push:
     branches: [ main ] 
@@ -8,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # อัปเดตเป็น v4 ใหม่ล่าสุด
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
@@ -17,8 +18,15 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # 1. เข้าไปยังโฟลเดอร์โปรเจกต์ใน Server (แก้ Path ให้ตรงกับเครื่องคุณ)
             cd /path/to/your/project
+
+            # 2. ดึงโค้ดล่าสุดลงมา
             git pull origin main
-            npm install
-            npm run build
-            pm2 restart all
+
+            # 3. สั่ง Docker Build และรันใหม่ (ใช้ Dockerfile และ Compose ที่คุณมี)
+            # --build จะสั่งให้มันสร้าง Image ใหม่ตามโค้ดที่เพิ่ง pull มา
+            docker compose up -d --build
+
+            # 4. ลบ Image เก่าๆ ที่ไม่ได้ใช้ทิ้งเพื่อประหยัดที่ใน Server (Optional)
+            docker image prune -f
