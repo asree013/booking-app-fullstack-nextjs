@@ -3,14 +3,14 @@ generator client {
 }
 
 datasource db {
-  // provider = "mysql"
-  provider = env("DATABASE_PROVIDER")
+  provider = "mysql"
+  // provider = env("DATABASE_PROVIDER")
   url      = env("DATABASE_URL")
 }
 
 model Users {
-  id          String   @id @default(uuid())
-  email       String   @unique
+  id          String     @id @default(uuid())
+  email       String     @unique
   password    String
   first_name  String
   last_name   String
@@ -18,9 +18,9 @@ model Users {
   tell        String?
   image       String?
   address     String?
-  role        Roles    @default(USER)
-  create_date DateTime @default(now())
-  update_date DateTime @updatedAt
+  role        Roles      @default(USER)
+  create_date DateTime   @default(now())
+  update_date DateTime   @updatedAt
   bookings    Bookings[]
 }
 
@@ -43,56 +43,67 @@ model Category {
 }
 
 model Product {
-  id          String    @id @default(uuid())
-  name        String
-  detail      String?
-  image       String?
-  price       String?   // ราคาเริ่มต้น หรือราคาเฉลี่ยของประเภทนี้
-  rating      Int?      @default(0)
-  
+  id     String  @id @default(uuid())
+  name   String
+  detail String?
+  image  String?
+  price  String? // ราคาเริ่มต้น หรือราคาเฉลี่ยของประเภทนี้
+  rating Int?    @default(0)
+
   // Relations
-  categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  rooms       Rooms[]   // 1 ประเภทสินค้า (เช่น Deluxe) มีได้หลายห้องจริง
-  
-  create_date DateTime  @default(now())
-  update_date DateTime  @updatedAt
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  rooms      Rooms[] // 1 ประเภทสินค้า (เช่น Deluxe) มีได้หลายห้องจริง
+
+  create_date DateTime @default(now())
+  update_date DateTime @updatedAt
 }
 
 model Rooms {
-  id          String    @id @default(uuid())
-  name        String    // เลขห้อง เช่น A101
-  price       Int       // ราคาจริงของห้องนี้
-  image       String?
-  is_active   Boolean   @default(true)
-  
-  // Relations
-  productId   String
-  product     Product   @relation(fields: [productId], references: [id])
-  
-  bookingId   String?
-  booking     Bookings? @relation(fields: [bookingId], references: [id])
+  id        String  @id @default(uuid())
+  name      String // เลขห้อง เช่น A101
+  price     Int // ราคาจริงของห้องนี้
+  image     String?
+  is_active Boolean @default(true)
 
-  create_date DateTime  @default(now())
-  update_date DateTime  @updatedAt
+  // Relations
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  bookingId String?
+  booking   Bookings? @relation(fields: [bookingId], references: [id])
+
+  create_date     DateTime       @default(now())
+  update_date     DateTime       @updatedAt
+  categoryRooms   CategoryRooms? @relation(fields: [categoryRoomsId], references: [id])
+  categoryRoomsId String?
+}
+
+model CategoryRooms {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  detail      String?
+  rooms       Rooms[]
+  create_date DateTime @default(now())
+  update_date DateTime @updatedAt
 }
 
 model Bookings {
-  id            String          @id @default(uuid())
-  userId        String
-  user          Users           @relation(fields: [userId], references: [id])
-  rooms         Rooms[]         // 1 การจองอาจจองได้หลายห้อง
-  
+  id     String  @id @default(uuid())
+  userId String
+  user   Users   @relation(fields: [userId], references: [id])
+  rooms  Rooms[] // 1 การจองอาจจองได้หลายห้อง
+
   // สถานะและหมวดหมู่การจอง
   status        BookingStatus   @default(PENDING)
   bookingTypeId String
   bookingType   CategoryBooking @relation(fields: [bookingTypeId], references: [id])
-  
-  total_price   Int
-  check_in      DateTime
-  check_out     DateTime
-  create_date   DateTime        @default(now())
-  update_date   DateTime        @updatedAt
+
+  total_price Int
+  check_in    DateTime
+  check_out   DateTime
+  create_date DateTime @default(now())
+  update_date DateTime @updatedAt
 }
 
 model CategoryBooking {

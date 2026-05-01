@@ -19,31 +19,29 @@ import {
     BookText,
     Warehouse
 } from 'lucide-react';
-import { useRouter, usePathname, redirect } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthHook } from '@/hooks/auth-hook';
 import { useToast } from '@/hooks/toast-hook';
 
 function NavBar({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { user } = useAuthHook()
     const { toast, open, setOpen, onConfirm, title, description, variant } = useToast();
 
     const menuItems = [
-        { icon: <LayoutDashboard size={20} />, label: "Overview", href: "/page/dashboard" },
-        { icon: <Warehouse size={20} />, label: "Product", href: "/page/product" },
-        { icon: <BookText size={20} />, label: "Booking", href: "/page/booking" },
-        { icon: <BarChart3 size={20} />, label: "Analytics", href: "/page/analytics" },
-        { icon: <Users size={20} />, label: "Customers", href: "/page/user-management" },
-        { icon: <PieChart size={20} />, label: "Reports", href: "/page/reports" },
+        { icon: <LayoutDashboard size={20} />, label: "Overview", href: "/page/dashboard", roles: ["USER"] },
+        { icon: <Warehouse size={20} />, label: "Product", href: "/page/product", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
+        { icon: <BookText size={20} />, label: "Booking", href: "/page/booking", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
+        { icon: <BarChart3 size={20} />, label: "Analytics", href: "/page/analytics", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
+        { icon: <Users size={20} />, label: "Customers", href: "/page/user-management", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
+        { icon: <PieChart size={20} />, label: "Reports", href: "/page/reports", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
     ];
 
     const onLogOut = () => {
-
         localStorage.removeItem('userData')
-        // redirect('/page/login')
-        redirect('/page/login')
-        // window.location.href = '/page/login'
+        router.push('/page/login')
     }
 
     const handleLogoutClick = () => {
@@ -76,10 +74,10 @@ function NavBar({ children }: { children: React.ReactNode }) {
                         key={item.href}
                         icon={item.icon}
                         label={item.label}
-                        active={pathname === item.href}
+                        active={pathname.includes(item.href)}
                         onClick={() => {
                             setIsMobileMenuOpen(false);
-                            redirect(item.href);
+                            router.push(item.href);
                         }}
                     />
                 ))}
@@ -91,7 +89,7 @@ function NavBar({ children }: { children: React.ReactNode }) {
                     icon={<Settings size={20} />}
                     label="Settings"
                     active={pathname === '/page/settings'}
-                    onClick={() => redirect('/page/settings')}
+                    onClick={() => router.push('/page/settings')}
                 />
             </nav>
 

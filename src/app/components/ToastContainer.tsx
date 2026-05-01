@@ -19,6 +19,7 @@ export const ToastContainer = ({ open, onOpenChange, title, description, variant
         warning: 'border-l-yellow-500',
         loading: 'border-l-indigo-500',
         info: 'border-l-blue-500',
+        confirm: 'border-l-purple-500',
     };
 
     const Icon = () => {
@@ -28,6 +29,7 @@ export const ToastContainer = ({ open, onOpenChange, title, description, variant
             case 'error': return <AlertCircle className="h-5 w-5 text-red-500" />;
             case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
             case 'info': return <Info className="h-5 w-5 text-blue-500" />;
+            case 'confirm': return <AlertCircle className="h-5 w-5 text-purple-500" />;
         }
     };
 

@@ -5,6 +5,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('jwt')?.value
   const { pathname } = request.nextUrl
 
+  // 1. ยกเว้นไฟล์ static และ api ต่างๆ ออกไปก่อน
   if (
     pathname.startsWith('/_next') ||
     pathname.includes('/api/') ||
@@ -13,43 +14,31 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (["/health", "/health/", "/healthz"].includes(pathname)) {
-    return NextResponse.redirect(new URL("/", request.url), 307);
+  // 2. จัดการหน้า Public
+  const isLoginPage = pathname === '/page/login'
+  const isPublicPath = isLoginPage || pathname.startsWith('/public')
+
+  // 3. ถ้ามี Token และพยายามเข้าหน้า Login -> ดีดไป Dashboard
+  if (token && isLoginPage) {
+    // ใช้ request.nextUrl.clone() เพื่อคง protocol/host ที่ถูกต้องไว้
+    const dashboardUrl = request.nextUrl.clone()
+    dashboardUrl.pathname = '/page/dashboard'
+    return NextResponse.redirect(dashboardUrl)
   }
 
-  const publicPaths = [
-    "/page/login",
-    "/public",
-    "/api",
-    "/favicon.ico",
-  ];
-
-  const isPublicPath = publicPaths.some(path =>
-    pathname === path || pathname.startsWith(path + "/")
-  ) || pathname.startsWith('/_next');
-
-
-  if (isPublicPath) {
-    if (token && pathname === '/page/login') {
-      return NextResponse.redirect(new URL('/page/dashboard', request.url))
-    }
-    return NextResponse.next()
-  }
-
-  if (!token) {
-    const loginUrl = new URL('/page/login', request.url)
+  // 4. ถ้าไม่มี Token และไม่ใช่หน้า Public -> ดีดไป Login
+  if (!token && !isPublicPath) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/page/login'
+    // ล้าง query parameters ออกให้หมดเพื่อป้องกันการวนลูปของ _rsc
+    loginUrl.search = ''
     return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
 }
 
-// export const config = {
-//   // แนะนำให้ใช้ matcher ที่ตัดไฟล์ static ออกเพื่อลดการทำงานของ Middleware
-//   matcher: [
-//     '/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)',
-//   ],
-// };
 export const config = {
-  matcher: ["/:path*"],
-};
+  // ใช้ matcher ที่มีประสิทธิภาพมากขึ้น (ตัดพวกไฟล์รูปและ static ออก)
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+}

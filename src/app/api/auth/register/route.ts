@@ -8,7 +8,7 @@ export const POST = async (req: NextRequest) => {
     const result = await Services.userService.create(body)
     if (result.err) {
         return NextResponse.json(
-            { message: result.err.message, data: result.data },
+            { message: result.err, data: result.data },
             { status: result.status?? 400 },
         );
     }

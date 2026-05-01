@@ -1,9 +1,10 @@
 'use client';
 
-import { ArrowRight, Zap, ImageIcon, SquarePen, BedDouble } from 'lucide-react' // เพิ่ม ImageIcon
+import { ArrowRight, Zap, ImageIcon, SquarePen, BedDouble, Delete, Trash, Settings2 } from 'lucide-react' // เพิ่ม ImageIcon
 import { useRouter } from 'next/navigation'
 import { TProductWithRelations } from './page'
 import { useAuthHook } from '@/hooks/auth-hook';
+import { Button } from 'antd';
 
 type Props = {
     data: TProductWithRelations
@@ -23,6 +24,10 @@ function CardRooms({ data }: Props) {
     const handleEdit = () => {
         router.push(`/page/product/${data.id}`);
     };
+
+    const handleDelete = () => {
+
+    }
 
     const { user } = useAuthHook()
 
@@ -70,35 +75,52 @@ function CardRooms({ data }: Props) {
                             ฿{Number(data.price)?.toLocaleString() ?? 0}
                         </span>
                     </div>
-                    <div className='flex gap-2'>
+                    <div className='flex flex-col gap-2'>
+                        <div className='flex gap-2'>
+                            {
+                                user.role === "ADMIN" &&
+                                <>
+                                    <button
+                                        onClick={handleEdit} // ใช้ router.push แทน redirect
+                                        className="shrink-0 bg-sky-800 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-sky-600 shadow-xl shadow-slate-200 cursor-pointer"
+                                    >
+                                        <SquarePen size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                        {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
+                                    </button>
+
+                                    <button
+                                        onClick={handleRoom} // ใช้ router.push แทน redirect
+                                        className="shrink-0 bg-yellow-600 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-yellow-500 shadow-xl shadow-slate-200 cursor-pointer"
+                                    >
+                                        <Settings2 size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                        {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
+                                    </button>
+                                </>
+                            }
+                            <button
+                                onClick={handleBooking} // ใช้ router.push แทน redirect
+                                className="shrink-0 bg-slate-900 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-indigo-600 shadow-xl shadow-slate-200 cursor-pointer"
+                            >
+                                <BedDouble size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
+                            </button>
+                        </div>
                         {
                             user.role === "ADMIN" &&
-                            <>
-                                <button
-                                    onClick={handleEdit} // ใช้ router.push แทน redirect
-                                    className="shrink-0 bg-sky-800 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-sky-600 shadow-xl shadow-slate-200 cursor-pointer"
-                                >
-                                    <SquarePen size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
-                                    {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
-                                </button>
-
-                                <button
-                                    onClick={handleRoom} // ใช้ router.push แทน redirect
-                                    className="shrink-0 bg-yellow-600 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-yellow-500 shadow-xl shadow-slate-200 cursor-pointer"
-                                >
-                                    <BedDouble size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
-                                    {/* <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} /> */}
-                                </button>
-                            </>
+                            <Button
+                                onClick={handleDelete} // ใช้ router.push แทน redirect
+                                type='default'
+                                variant='solid'
+                                color='danger'
+                                style={{ padding: 4, height: 44, width: "100%" }}
+                            >
+                                <Trash size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
+                                <label htmlFor="" className='text-lg'>ลบ</label>
+                            </Button>
                         }
-                        <button
-                            onClick={handleBooking} // ใช้ router.push แทน redirect
-                            className="shrink-0 bg-slate-900 text-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl transition-all active:scale-90 hover:bg-indigo-600 shadow-xl shadow-slate-200 cursor-pointer"
-                        >
-                            <ArrowRight size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
-                        </button>
                     </div>
+
                 </div>
+
             </div>
         </div>
     )

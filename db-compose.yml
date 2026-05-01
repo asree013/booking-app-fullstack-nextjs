@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # รองรับ HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - next_network
+
   mysql_fullstack:
     image: mysql:8
     environment:
@@ -12,10 +27,32 @@ services:
       - "3306:3306"
     env_file:
       - .env
-    # env_file:
-    #   - .env.prod
     volumes:
       - mysql_data_1:/var/lib/mysql
+    networks:
+      - next_network
+
+  app_next:
+    image: asree001/booking-app-next:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USERNAME}:${MYSQL_PASSWORD}@mysql_fullstack:3306/${MYSQL_DATABASE}
+    env_file:
+      - .env
+    depends_on:
+      - mysql_fullstack
+    networks:
+      - next_network
 
 volumes:
   mysql_data_1:
+  caddy_data:
+  caddy_config:
+
+networks:
+  next_network:
+    driver: bridge

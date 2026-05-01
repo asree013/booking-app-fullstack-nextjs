@@ -8,11 +8,10 @@ import * as Separator from '@radix-ui/react-separator';
 import { ChevronLeft, Save, UserPlus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// Import Schema ของคุณ
-import { createUserSchema, CreateUserInput, RolesEnum } from '@/schema/users';
+import { createUserSchema, CreateUserInput, RolesEnum, UpdateUserInput } from '@/schema/users';
 
 interface UserFormPageProps {
-  initialData?: CreateUserInput; // ถ้ามี data ส่งมาจะเป็นโหมด Update
+  initialData?: UpdateUserInput; // ถ้ามี data ส่งมาจะเป็นโหมด Update
   id?: string;
 }
 
@@ -28,7 +27,7 @@ export default function UserFormPage({ initialData, id }: UserFormPageProps) {
     formState: { errors, isSubmitting }
   } = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: initialData || {
+    defaultValues: (initialData as CreateUserInput) || {
       role: 'USER',
       age: '',
       tell: '',

@@ -10,7 +10,7 @@ export const GET = async (req: NextRequest) => {
     
     
     return NextResponse.json(
-        { message: result.err?.message ?? 'this the JWT', data: result.data },
+        { message: result.err ?? 'Verified JWT', data: result.data },
         { status: result.status },
     )
 }

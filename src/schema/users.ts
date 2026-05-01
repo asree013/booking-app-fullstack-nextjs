@@ -19,6 +19,7 @@ export const usersSchema = z.object({
 // สำหรับ Create: บังคับ Password อย่างน้อย 6 ตัว
 export const createUserSchema = usersSchema.extend({
   password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
+  role: RolesEnum,
 });
 
 // สำหรับ Update: ใช้ตัว usersSchema ปกติ (ซึ่ง password เป็น optional อยู่แล้ว)

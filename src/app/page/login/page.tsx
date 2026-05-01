@@ -6,14 +6,14 @@ import { useForm } from 'react-hook-form';
 import { loginSchema, TLogin } from '@/schema/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiService } from '@/service/ApiServices';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/toast-hook';
 import { ToastContainer } from '@/app/components/ToastContainer';
 import { Loader2 } from 'lucide-react';
 import { useAuthHook } from '@/hooks/auth-hook';
 
 export default function LoginPage() {
-    const routers = useRouter();
+    const router = useRouter();
     const { toast, open, setOpen, title, description, variant } = useToast();
 
     const {
@@ -49,14 +49,13 @@ export default function LoginPage() {
         }
         localStorage.setItem('userData', JSON.stringify(users))
 
-        setInterval(() => {
+        setTimeout(() => {
             toast({ title: "เข้าสู่ระบบสำเร็จ", description: "กำลังนำคุณไปยัง Dashboard", variant: "success" });
             if (result.data.user.role === "ADMIN") {
-                redirect('/page/dashboard')
+                router.push('/page/dashboard')
             }
             else {
-                redirect('/page/home')
-
+                router.push('/page/home')
             }
         }, 1000)
     };

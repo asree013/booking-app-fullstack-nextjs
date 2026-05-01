@@ -2,7 +2,7 @@ import { TMetaData } from "@/app/components/model/type";
 import { handler, THandler } from "@/class/handler";
 import { TLogin } from "@/schema/auth";
 import { CreateUserInput, Users } from "@/schema/users";
-import { Category, CategoryBooking, Product } from "@prisma/client";
+import { Category, CategoryBooking, Product, Rooms } from "@prisma/client";
 import axios from "axios";
 import { endPoint } from "config";
 import Cookies from 'js-cookie'
@@ -15,15 +15,16 @@ class ApiService {
     async login(data: TLogin) {
         try {
             const result = await endPoint.post('/api/auth/login', data)
-            if (result.data.jwt) {
+            if (result.data.data && result.data.data.jwt) {
+                const userData = result.data.data;
                 const user = {
-                    jwt: result.data.jwt,
-                    first_name: result.data.first_name,
-                    last_name: result.data.last_name,
+                    jwt: userData.jwt,
+                    first_name: userData.user.first_name,
+                    last_name: userData.user.last_name,
                 }
-                Cookies.set('jwt', result.data.jwt, { expires: 7 })
+                Cookies.set('jwt', userData.jwt, { expires: 7, path: '/', secure: process.env.NODE_ENV === 'production' })
                 localStorage.setItem('userData', JSON.stringify(user))
-                window.location.href = '/page/dashboard'
+                // ให้ LoginPage เป็นคนจัดการ redirect เพื่อให้แสดง Toast ได้
             }
             return handler(result.data.data, undefined, 200)
         } catch (error: any) {
@@ -212,6 +213,77 @@ class ApiService {
                 return handler({} as Product, new Error(error.response?.data.message), 400)
             }
             return handler({} as Product, new Error(error.message as any), 500)
+        }
+    }
+
+    async createRoom(data: Rooms): Promise<THandler<Rooms>> {
+        try {
+            const result = await endPoint.post<TMetaData<Rooms>>(`/api/room`, data)
+            return handler(result.data.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler({} as Rooms, new Error(error.response?.data.message), 400)
+            }
+            return handler({} as Rooms, new Error(error.message as any), 500)
+        }
+    }
+
+    async getRoom(): Promise<THandler<Rooms[]>> {
+        try {
+            const result = await endPoint.get<TMetaData<Rooms[]>>(`/api/room`)
+            return handler(result.data.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler([] as Rooms[], new Error(error.response?.data.message), 400)
+            }
+            return handler([] as Rooms[], new Error(error.message as any), 500)
+        }
+    }
+
+    async getRoomByProductId(productId: string): Promise<THandler<Rooms[]>> {
+        try {
+            const result = await endPoint.get<TMetaData<Rooms[]>>(`/api/room/product/${productId}`)
+            return handler(result.data.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler([] as Rooms[], new Error(error.response?.data.message), 400)
+            }
+            return handler([] as Rooms[], new Error(error.message as any), 500)
+        }
+    }
+
+    async getRoomByRoomId(id: string): Promise<THandler<Rooms>> {
+        try {
+            const result = await endPoint.get<TMetaData<Rooms>>(`/api/room/${id}`)
+            return handler(result.data.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler({} as Rooms, new Error(error.response?.data.message), 400)
+            }
+            return handler({} as Rooms, new Error(error.message as any), 500)
+        }
+    }
+
+    async updateRoomByRoomId(id: string, data: Rooms): Promise<THandler<Rooms>> {
+        try {
+            const result = await endPoint.put<TMetaData<Rooms>>(`/api/room/${id}`, data)
+            return handler(result.data.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler({} as Rooms, new Error(error.response?.data.message), 400)
+            }
+            return handler({} as Rooms, new Error(error.message as any), 500)
+        }
+    }
+    async deleteRoomByRoomId(id: string): Promise<THandler<Rooms>> {
+        try {
+            const result = await endPoint.delete<TMetaData<Rooms>>(`/api/room/${id}`)
+            return handler(result.data.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler({} as Rooms, new Error(error.response?.data.message), 400)
+            }
+            return handler({} as Rooms, new Error(error.message as any), 500)
         }
     }
 }
