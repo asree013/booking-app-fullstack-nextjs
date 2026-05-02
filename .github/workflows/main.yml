@@ -2,35 +2,92 @@ name: Deploy Next.js to Server
 
 on:
   push:
-    branches: [ main ] 
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+
+    env:
+      REGISTRY: docker.io
+      DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+      IMAGE_API: asree001/booking-app-next:latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
+      - name: Extract version from package.json
+        id: package-version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Extracted version: $VERSION"
+
+      - name: Validate version
+        run: |
+          if [ -z "${{ steps.package-version.outputs.VERSION }}" ] || [ "${{ steps.package-version.outputs.VERSION }}" = "null" ]; then
+            echo "❌ Failed to extract version from package.json"
+            exit 1
+          fi
+          echo "✅ Version validation passed: ${{ steps.package-version.outputs.VERSION }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # 1. เข้าโฟลเดอร์โปรเจกต์ใน Server
-            cd /root/booking-app-fullstack-nextjs 
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            # 2. อัปเดตโค้ดจาก GitHub มาไว้ที่ Server
-            git fetch --all
-            git reset --hard origin/main
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{ env.IMAGE_API }}:latest
+            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{ env.IMAGE_API }}:${{ steps.package-version.outputs.VERSION }}
+          # Enable caching
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{
+            env.IMAGE_API }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{
+            env.IMAGE_API }}:cache,mode=max
 
-            # 3. สั่ง Build โดยระบุชื่อไฟล์เป็น app.yml และเจาะจง service app_next
-            # ใช้ --no-cache เพื่อบังคับให้สร้างใหม่ 100% ไม่ใช้ของเก่า
-            docker compose -f app.yml up -d app_next --build --no-cache
+# deploy:
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
 
-            # 4. ลบไฟล์ขยะ
-            docker image prune -f
+#     - name: Update Image
+#       run: |
+#         docker compose -f ./app.yml build app_next && docker compose -f ./app.yml push app_next
 
-            # 5. ตรวจสอบสถานะ (จะไปโผล่ในหน้า GitHub Actions ให้เราดู)
-            docker ps | grep app_next
+#     - name: Deploy via SSH
+#       uses: appleboy/ssh-action@master
+#       with:
+#         host: ${{ secrets.SERVER_IP }}
+#         username: ${{ secrets.SERVER_USER }}
+#         key: ${{ secrets.SSH_PRIVATE_KEY }}
+#         script: |
+#           # 1. เข้าโฟลเดอร์โปรเจกต์ใน Server
+#           cd /root/booking-app-fullstack-nextjs 
+
+#           # 2. อัปเดตโค้ดจาก GitHub มาไว้ที่ Server
+#           git fetch --all
+#           git reset --hard origin/main
+
+#           # 3. สั่ง Build โดยระบุชื่อไฟล์เป็น app.yml และเจาะจง service app_next
+#           # ใช้ --no-cache เพื่อบังคับให้สร้างใหม่ 100% ไม่ใช้ของเก่า
+#           docker compose -f app.yml up -d app_next --build --no-cache
+
+#           # 4. ลบไฟล์ขยะ
+#           docker image prune -f
+
+#           # 5. ตรวจสอบสถานะ (จะไปโผล่ในหน้า GitHub Actions ให้เราดู)
+#           docker ps | grep app_next
