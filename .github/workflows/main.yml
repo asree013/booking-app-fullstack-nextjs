@@ -57,21 +57,24 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. เข้าไปในโฟลเดอร์ที่มีไฟล์ app.yml
-            cd /root/booking-app-fullstack-nextjs/server
+            # 1. เข้าไปในโฟลเดอร์ server (ใช้ Path ที่สั้นลงตามที่คุณต้องการ)
+            cd server
 
-            # 2. Login Docker Hub บน Server เพื่อให้มีสิทธิ์ดึง Image
+            # 2. ล็อกอินเพื่อให้มีสิทธิ์ Pull (สำคัญมากสำหรับความปลอดภัย)
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-            # 3. ดึง Image ล่าสุดลงมา
+            # 3. ดึง Image ใหม่ล่าสุดลงมาจาก Docker Hub
             docker compose -f app.yml pull app_next
 
-            # 4. สั่ง Recreate container เฉพาะตัว app_next
-            # ไม่ต้องใช้ --build แล้วเพราะเราดึง Image สำเร็จรูปมาจาก Docker Hub
+            # 4. สั่งหยุดและลบ Container ตัวเก่าทิ้ง (ตามสไตล์ที่คุณต้องการ)
+            docker compose -f app.yml down app_next
+
+            # 5. สั่งรันขึ้นมาใหม่จาก Image ที่เพิ่ง Pull มา 
+            # (ไม่ต้องใช้ --build เพราะเรา Build มาจาก GitHub แล้ว)
             docker compose -f app.yml up -d app_next
 
-            # 5. ลบ Image เก่าที่ไม่ได้ใช้
+            # 6. ล้าง Image เก่าที่ค้างอยู่ในเครื่อง
             docker image prune -f
 
-            # 6. ตรวจสอบสถานะ
+            # 7. โชว์สถานะให้เห็นใน GitHub Actions
             docker ps | grep app_next
