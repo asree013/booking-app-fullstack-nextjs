@@ -11,7 +11,7 @@ jobs:
     env:
       REGISTRY: docker.io
       DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-      IMAGE_API: asree001/booking-app-next:latest
+      IMAGE_API: booking-app-next
 
     steps:
       - name: Checkout code
@@ -50,44 +50,39 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{ env.IMAGE_API }}:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{ env.IMAGE_API }}:${{ steps.package-version.outputs.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.package-version.outputs.VERSION }}
           # Enable caching
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{
-            env.IMAGE_API }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKERHUB_USER }}/${{
-            env.IMAGE_API }}:cache,mode=max
+          cache-from: |
+            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:build-cache
+          cache-to: |
+            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:build-cache,mode=max
 
-# deploy:
-#   runs-on: ubuntu-latest
-#   steps:
-#     - name: Checkout code
-#       uses: actions/checkout@v4
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#     - name: Update Image
-#       run: |
-#         docker compose -f ./app.yml build app_next && docker compose -f ./app.yml push app_next
+      - name: Update Image
+        run: |
+          docker compose -f ./app.yml build app_next && docker compose -f ./app.yml push app_next
 
-#     - name: Deploy via SSH
-#       uses: appleboy/ssh-action@master
-#       with:
-#         host: ${{ secrets.SERVER_IP }}
-#         username: ${{ secrets.SERVER_USER }}
-#         key: ${{ secrets.SSH_PRIVATE_KEY }}
-#         script: |
-#           # 1. เข้าโฟลเดอร์โปรเจกต์ใน Server
-#           cd /root/booking-app-fullstack-nextjs 
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd server
 
-#           # 2. อัปเดตโค้ดจาก GitHub มาไว้ที่ Server
-#           git fetch --all
-#           git reset --hard origin/main
+            docker compose -f app.yml pull app_next
+            docker compose -f app.yml down app_next
+            docker compose -f app.yml up -d app_next --build --no-cache
 
-#           # 3. สั่ง Build โดยระบุชื่อไฟล์เป็น app.yml และเจาะจง service app_next
-#           # ใช้ --no-cache เพื่อบังคับให้สร้างใหม่ 100% ไม่ใช้ของเก่า
-#           docker compose -f app.yml up -d app_next --build --no-cache
+            # 4. ลบไฟล์ขยะ
+            docker image prune -f
 
-#           # 4. ลบไฟล์ขยะ
-#           docker image prune -f
-
-#           # 5. ตรวจสอบสถานะ (จะไปโผล่ในหน้า GitHub Actions ให้เราดู)
-#           docker ps | grep app_next
+            # 5. ตรวจสอบสถานะ (จะไปโผล่ในหน้า GitHub Actions ให้เราดู)
+            docker ps | grep app_next
