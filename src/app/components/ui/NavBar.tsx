@@ -20,14 +20,15 @@ import {
     Warehouse
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthHook } from '@/hooks/auth-hook';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/toast-hook';
+import { apiService } from '@/service/ApiServices';
 
 function NavBar({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { user } = useAuthHook()
+    const { user } = useAuth()
     const { toast, open, setOpen, onConfirm, title, description, variant } = useToast();
 
     const menuItems = [
@@ -39,8 +40,8 @@ function NavBar({ children }: { children: React.ReactNode }) {
         { icon: <PieChart size={20} />, label: "Reports", href: "/page/reports", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
     ];
 
-    const onLogOut = () => {
-        localStorage.removeItem('userData')
+    const onLogOut = async () => {
+        await apiService.logout()
         router.push('/page/login')
     }
 

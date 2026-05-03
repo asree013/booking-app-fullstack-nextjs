@@ -5,21 +5,25 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('jwt')?.value
   const { pathname } = request.nextUrl
 
+  // Debug log เพื่อตรวจสอบการทำงาน
+  console.log(`[Middleware] Path: ${pathname} | Token: ${token ? '✅' : '❌'}`)
+
   // 1. ยกเว้นไฟล์ static และ api ต่างๆ ออกไปก่อน
   if (
     pathname.startsWith('/_next') ||
     pathname.includes('/api/') ||
-    pathname.includes('.')
+    pathname.includes('/static/') ||
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js)$/)
   ) {
     return NextResponse.next()
   }
 
   // 2. จัดการหน้า Public
-  const isLoginPage = pathname === '/page/login'
-  const isPublicPath = isLoginPage || pathname.startsWith('/public')
+  const isAuthPage = pathname === '/page/login' || pathname === '/page/sign-up'
+  const isPublicPath = isAuthPage || pathname.startsWith('/public')
 
-  // 3. ถ้ามี Token และพยายามเข้าหน้า Login -> ดีดไป Dashboard
-  if (token && isLoginPage) {
+  // 3. ถ้ามี Token และพยายามเข้าหน้า Login หรือ Sign-up -> ดีดไป Dashboard
+  if (token && isAuthPage) {
     // ใช้ request.nextUrl.clone() เพื่อคง protocol/host ที่ถูกต้องไว้
     const dashboardUrl = request.nextUrl.clone()
     dashboardUrl.pathname = '/page/dashboard'

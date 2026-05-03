@@ -66,12 +66,9 @@ jobs:
             # 3. ดึง Image ใหม่ล่าสุดลงมาจาก Docker Hub
             docker compose -f app.yml pull app_next
 
-            # 4. สั่งหยุดและลบ Container ตัวเก่าทิ้ง (ตามสไตล์ที่คุณต้องการ)
-            docker compose -f app.yml down app_next
-
             # 5. สั่งรันขึ้นมาใหม่จาก Image ที่เพิ่ง Pull มา 
             # (ไม่ต้องใช้ --build เพราะเรา Build มาจาก GitHub แล้ว)
-            docker compose -f app.yml up -d app_next
+            docker compose -f app.yml up -d
 
             # 6. ล้าง Image เก่าที่ค้างอยู่ในเครื่อง
             docker image prune -f

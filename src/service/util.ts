@@ -52,4 +52,22 @@ export class Utils {
             return null;
         }
     }
+
+    signOutJwt(token: string) {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET as string);
+            return decoded as JwtPayload;
+        } catch (err) {
+            if (err instanceof jwt.TokenExpiredError) {
+                console.error("JWT Expired at:", err.expiredAt);
+            } else if (err instanceof jwt.JsonWebTokenError) {
+                console.error("Invalid JWT Token");
+            }
+            return null;
+        }
+    }
+
+    logout() {
+        return { message: "Sign out success" }
+    }
 }

@@ -3,7 +3,7 @@
 import { ArrowRight, Zap, ImageIcon, SquarePen, BedDouble, Delete, Trash, Settings2 } from 'lucide-react' // เพิ่ม ImageIcon
 import { useRouter } from 'next/navigation'
 import { TProductWithRelations } from './page'
-import { useAuthHook } from '@/hooks/auth-hook';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from 'antd';
 
 type Props = {
@@ -29,7 +29,7 @@ function CardRooms({ data }: Props) {
 
     }
 
-    const { user } = useAuthHook()
+    const { user } = useAuth()
 
     return (
         <div className="w-full group shadow-2xl bg-white rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col min-w-0">

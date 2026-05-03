@@ -286,6 +286,20 @@ class ApiService {
             return handler({} as Rooms, new Error(error.message as any), 500)
         }
     }
+
+    async logout(): Promise<THandler<any>> {
+        try {
+            const result = await endPoint.get('/api/auth/sign-out')
+            Cookies.remove('jwt')
+            localStorage.removeItem('userData')
+            return handler(result.data, undefined, 200)
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                return handler({}, new Error(error.response?.data.message), 400)
+            }
+            return handler({}, new Error(error.message as any), 500)
+        }
+    }
 }
 
 export const apiService = new ApiService()

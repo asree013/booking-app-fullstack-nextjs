@@ -1,6 +1,6 @@
 import { loginSchema, TLogin } from "@/schema/auth";
 import { Services } from ".";
-import { handler } from "@/class/handler";
+import { handler, THandler } from "@/class/handler";
 import { prisma } from "lib/db";
 import { RepoUsers } from "@/repositorys/RepoUser";
 
@@ -54,6 +54,15 @@ export class UserServices extends RepoUsers {
                 new Error(isExpired ? 'Token หมดอายุแล้ว' : 'ยืนยันตัวตนล้มเหลว'),
                 401
             );
+        }
+    }
+
+    async logout(jwt: string): Promise<THandler<{ message: string }>> {
+        try {
+            const result = Services.utils.logout();
+            return handler({ message: result.message }, undefined, 200)
+        } catch (error: any) {
+            return handler({ message: error.message }, new Error(error), 500)
         }
     }
 }

@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/toast-hook';
 import { ToastContainer } from '@/app/components/ToastContainer';
 import { Loader2 } from 'lucide-react';
-import { useAuthHook } from '@/hooks/auth-hook';
 import Link from 'next/link';
 
 export default function LoginPage() {
