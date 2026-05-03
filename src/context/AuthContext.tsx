@@ -40,13 +40,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const isAuthPage = pathname === '/page/login' || pathname === "/page/sign-up";
 
-  if (isAuthPage) {
-    return <>{children}</>;
-  }
-
   return (
     <AuthContext.Provider value={{ user, isLoad, checkAuth }}>
-      <NavBar>{children}</NavBar>
+      {isAuthPage ? (
+        <>{children}</>
+      ) : (
+        <NavBar>{children}</NavBar>
+      )}
     </AuthContext.Provider>
   );
 }
