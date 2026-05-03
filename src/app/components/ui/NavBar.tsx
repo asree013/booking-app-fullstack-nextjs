@@ -28,20 +28,22 @@ function NavBar({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { user } = useAuth()
+    const { user, checkAuth } = useAuth()
     const { toast, open, setOpen, onConfirm, title, description, variant } = useToast();
 
     const menuItems = [
-        { icon: <LayoutDashboard size={20} />, label: "Overview", href: "/page/dashboard", roles: ["USER"] },
+        { icon: <LayoutDashboard size={20} />, label: "Home", href: "/page/home", roles: ["USER"] },
+        { icon: <LayoutDashboard size={20} />, label: "Dashboard", href: "/page/dashboard", roles: ["ADMIN", "SUPER_ADMIN"] },
         { icon: <Warehouse size={20} />, label: "Product", href: "/page/product", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
         { icon: <BookText size={20} />, label: "Booking", href: "/page/booking", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
-        { icon: <BarChart3 size={20} />, label: "Analytics", href: "/page/analytics", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
-        { icon: <Users size={20} />, label: "Customers", href: "/page/user-management", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
-        { icon: <PieChart size={20} />, label: "Reports", href: "/page/reports", roles: ["USER", "ADMIN", "SUPER_ADMIN"] },
+        { icon: <BarChart3 size={20} />, label: "Analytics", href: "/page/analytics", roles: ["ADMIN", "SUPER_ADMIN"] },
+        { icon: <Users size={20} />, label: "Customers", href: "/page/user-management", roles: ["ADMIN", "SUPER_ADMIN"] },
+        { icon: <PieChart size={20} />, label: "Reports", href: "/page/reports", roles: ["USER"] },
     ];
 
     const onLogOut = async () => {
         await apiService.logout()
+        checkAuth()
         router.push('/page/login')
     }
 
@@ -70,18 +72,36 @@ function NavBar({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav className="flex-1 px-4 space-y-1">
-                {menuItems.map((item) => (
-                    <NavItem
-                        key={item.href}
-                        icon={item.icon}
-                        label={item.label}
-                        active={pathname.includes(item.href)}
-                        onClick={() => {
-                            setIsMobileMenuOpen(false);
-                            router.push(item.href);
-                        }}
-                    />
-                ))}
+                {menuItems.map((item) => {
+                    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+                        return (
+                            <NavItem
+                                key={item.href}
+                                icon={item.icon}
+                                label={item.label}
+                                active={pathname.includes(item.href)}
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    router.push(item.href);
+                                }}
+                            />
+                        )
+                    }
+                    if (user.role === 'USER') {
+                        return (
+                            <NavItem
+                                key={item.href}
+                                icon={item.icon}
+                                label={item.label}
+                                active={pathname.includes(item.href)}
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    router.push(item.href);
+                                }}
+                            />
+                        )
+                    }
+                })}
 
                 <div className="pt-4 pb-2 px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     System

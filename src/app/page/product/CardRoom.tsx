@@ -78,7 +78,7 @@ function CardRooms({ data }: Props) {
                     <div className='flex flex-col gap-2'>
                         <div className='flex gap-2'>
                             {
-                                user.role === "ADMIN" &&
+                                user.role.toLocaleLowerCase() === "admin" &&
                                 <>
                                     <button
                                         onClick={handleEdit} // ใช้ router.push แทน redirect
@@ -105,7 +105,7 @@ function CardRooms({ data }: Props) {
                             </button>
                         </div>
                         {
-                            user.role === "ADMIN" &&
+                            user.role.toLocaleLowerCase() === "admin" &&
                             <Button
                                 onClick={handleDelete} // ใช้ router.push แทน redirect
                                 type='default'

@@ -10,10 +10,12 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/toast-hook';
 import { ToastContainer } from '@/app/components/ToastContainer';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
+    const { checkAuth } = useAuth();
     const { toast, open, setOpen, title, description, variant } = useToast();
 
     const {
@@ -48,6 +50,7 @@ export default function LoginPage() {
             role: string
         }
         localStorage.setItem('userData', JSON.stringify(users))
+        checkAuth();
 
         setTimeout(() => {
             toast({ title: "เข้าสู่ระบบสำเร็จ", description: "กำลังนำคุณไปยัง Dashboard", variant: "success" });

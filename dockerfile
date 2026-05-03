@@ -34,12 +34,13 @@ RUN adduser --system --uid 1001 nextjs
 # 1. ก๊อปปี้ standalone มาก่อน (มันจะมาพร้อมโครงสร้าง .next บางส่วน)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
-# 2. จัดการเรื่องสิทธิ์ (เปลี่ยนเป็น -p และใช้ -R เพื่อครอบคลุมทุกไฟล์)
+# 2. จัดการเรื่องสิทธิ์ (สร้าง uploads และแก้สิทธิ์)
+RUN mkdir -p public/uploads && chown -R nextjs:nodejs public/uploads
 RUN mkdir -p .next && chown -R nextjs:nodejs .next
 
 USER nextjs

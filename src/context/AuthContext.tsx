@@ -14,6 +14,7 @@ interface User {
 interface AuthContextType {
   user: User;
   isLoad: boolean;
+  checkAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,12 +24,18 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const [user, setUser] = useState<User>({ jwt: "", first_name: "", last_name: "", role: "" });
   const [isLoad, setIsLoad] = useState(true);
 
-  useEffect(() => {
+  const checkAuth = () => {
     const userData = localStorage.getItem('userData');
     if (userData) {
       setUser(JSON.parse(userData));
+    } else {
+      setUser({ jwt: "", first_name: "", last_name: "", role: "" });
     }
     setIsLoad(false);
+  };
+
+  useEffect(() => {
+    checkAuth();
   }, []);
 
   const isAuthPage = pathname === '/page/login' || pathname === "/page/sign-up";
@@ -38,7 +45,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoad }}>
+    <AuthContext.Provider value={{ user, isLoad, checkAuth }}>
       <NavBar>{children}</NavBar>
     </AuthContext.Provider>
   );
