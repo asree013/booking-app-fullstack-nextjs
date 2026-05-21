@@ -33,9 +33,12 @@ services:
       - mysql_fullstack
     networks:
       - next_network
+    volumes:
+      - uploads_data:/app/uploads
 
 volumes:
   mysql_data_1:
+  uploads_data:
   caddy_data:
   caddy_config:
 

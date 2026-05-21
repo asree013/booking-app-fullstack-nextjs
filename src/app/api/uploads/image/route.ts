@@ -15,14 +15,14 @@ export const POST = async (req: NextRequest) => {
         const buffer = Buffer.from(bytes);
 
         const fileName = `${Date.now()}_${file.name}`;
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        const uploadDir = path.join(process.cwd(), "uploads");
 
         await mkdir(uploadDir, { recursive: true }); 
 
         const filePath = path.join(uploadDir, fileName);
         await writeFile(filePath, buffer);
 
-        const imageUrl = `/uploads/${fileName}`;
+        const imageUrl = `/api/images/${fileName}`;
 
         return NextResponse.json({ 
             success: true, 

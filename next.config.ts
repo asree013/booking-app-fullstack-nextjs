@@ -9,6 +9,14 @@ const nextConfig: any = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/images/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

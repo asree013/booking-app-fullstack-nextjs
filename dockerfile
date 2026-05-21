@@ -40,7 +40,7 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
 # 2. จัดการเรื่องสิทธิ์ (สร้าง uploads และแก้สิทธิ์)
-RUN mkdir -p public/uploads && chown -R nextjs:nodejs public/uploads
+RUN mkdir -p uploads && chown -R nextjs:nodejs uploads
 RUN mkdir -p .next && chown -R nextjs:nodejs .next
 
 USER nextjs
