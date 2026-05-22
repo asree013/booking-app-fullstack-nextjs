@@ -1,0 +1,13 @@
+booking.yeedev.asia {
+    # Reverse proxy ทุก request ไปยัง Next.js container
+    reverse_proxy app_next:3000
+
+    # Enable gzip compression
+    encode gzip
+
+    # Logging
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
