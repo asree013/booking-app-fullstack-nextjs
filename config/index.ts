@@ -23,11 +23,11 @@ const getBaseURL = () => {
 
 export const endPoint = axios.create({
     baseURL: getBaseURL(),
-    timeout: 10000,
+    timeout: (1_000 * 60) * 2,
 })
 
 const getTokenJwt = () => {
-    
+
 }
 
 export const headEndpoint = axios.create({
